@@ -146,7 +146,14 @@ plot(pc, type='l',main = "PCA Scree Plot")
 summary(pc)
 # About 75% of variance captured in first two components
 pc_df <- cbind.data.frame(pc$x[,1], pc$x[,2])
+```
+The scree plot below shows that the two components account for 75% of the variance in the 36 player attributes. Ideally, at least 85% of the variance would be retained, but according to the scree plot that would require about four components. For the purposes of visualization, I'll limit the number of components to two.
 
+![PCA Scree Plot](https://github.com/aaguilargonzalez/Comparing-Players-in-Fifa-18/blob/master/Images/PCA_Scree_Plot.jpeg)
+
+With the player attributes condensed to just two dimensions, its straightforward to create a scatter plot where each point represents a single player. For the plot below and the rest of the analysis, I focus on the top 750 players by overall ranking in the Fifa dataset.
+
+```r
 ggplot(pc_df, aes(pc$x[,1], pc$x[,2])) +
   geom_point() +
   ggtitle("Player Attributes Condensed by Principal Components") +
@@ -155,6 +162,184 @@ ggplot(pc_df, aes(pc$x[,1], pc$x[,2])) +
   theme_minimal() +
   theme(plot.title = element_text(hjust = 0.5))
 ```
-The scree plot below shows that the two components account for 75% of the variance in the 36 player attributes. Ideally, at least 85% of the variance would be retained, but according to the scree plot that would require about four components. For the purposes of visualization, I'll limit the number of components to two.
 
-![PCA Scree Plot](https://github.com/aaguilargonzalez/Comparing-Players-in-Fifa-18/blob/master/Images/PCA_Scree_Plot.jpeg)
+![PCA Scatter Plot](https://github.com/aaguilargonzalez/Comparing-Players-in-Fifa-18/blob/master/Images/PCA%20Scatter.png)
+
+It's clear that there are some groups of players clustered together. It's likely that goalkeepers form the cluster of players on the left of the scatter plot given that their attributes are so different to outfield players. To identify other potential clusters, I utilized both K-Means and Hierarchical Agglomerative (HClust) clustering. As the scree-like plots below indicate, each of the algorithms suggest a different number of clusters (judging by the "elbow" of each plot). The Hierarchical method suggests four or five clusters, while looking at the within group sum of squares for K-Means suggest three clusters would be optimal.
+
+```r
+#-------------------------------#
+#     Clustering Analysis       #
+#-------------------------------#
+
+## Hierarchical Clustering
+d <- dist(pc_df, method = "euclidean")
+fit <- hclust(d, method="complete")
+
+# Plot the height of the dendogram over the number of segments in the dendogram
+# Focus on the first 20 values since the height decreases asymptotically after that
+plot(seq(1,20), sort(fit$height, decreasing = TRUE)[1:20], type = "b", 
+     ylab = "Dendogram Height", xlab = "Number of Segments", 
+     main = "Scree-Like Plot for HClust Model")
+# Looks like 4 forms the elbow of the plot, segment where the longest jump takes place
+hclust_groups <- cutree(fit, k=5) # cut tree into 5 clusters
+
+## K-Means Clustering
+
+# Determine number of clusters
+wss <- (nrow(pc_df)-1)*sum(apply(pc_df,2,var))
+for (i in 2:15) wss[i] <- sum(kmeans(pc_df,iter.max = 1000,nstart = 25,
+                                     centers=i)$withinss)
+plot(1:15, wss, type="b", xlab="Number of Clusters",
+     ylab="Within groups sum of squares", main = "Scree-Like Plot for K-Means Model")
+```
+
+![Hclust Scree Plot](https://github.com/aaguilargonzalez/Comparing-Players-in-Fifa-18/blob/master/Images/Scree%20Plot%20HClust.png)
+
+![KMeans Scree Plot](https://github.com/aaguilargonzalez/Comparing-Players-in-Fifa-18/blob/master/Images/Scree%20Plot%20K-Means.png)
+
+Running each of the HClust and K-Means models on the Fifa players scatterplot shows the differences between the two models. K-Means operates on the assumption of equally proportionate clusters, and this bias shows in the plots below.
+
+```r
+k <- kmeans(pc_df, 3, nstart=25, iter.max=1000)
+
+## Compare the clusters graphically
+cluster_data <- cbind(pc_df, hclust_groups, k$cluster)
+
+ggplot(cluster_data, aes(pc$x[,1], pc$x[,2], color = hclust_groups)) +
+  geom_point(size=3) +
+  ggtitle("Hclust Model Clusters") +
+  ylab("Principal Component #2") +
+  xlab("Principal Component #1") +
+  theme_minimal() +
+  scale_color_gradient(low = "#0091ff", high = "#f0650e") +
+  theme(plot.title = element_text(hjust = 0.5),
+        legend.title = element_blank())
+
+ggplot(cluster_data, aes(pc$x[,1], pc$x[,2], color = k$cluster)) +
+  geom_point(size=3) +
+  ggtitle("K-Means Model Clusters") +
+  ylab("Principal Component #2") +
+  xlab("Principal Component #1") +
+  theme_minimal() +
+  scale_color_gradient(low = "#0091ff", high = "#f0650e") +
+  theme(plot.title = element_text(hjust = 0.5),
+        legend.title = element_blank())
+
+# Prefer hclust method b/c it does not assume that the clusters should be proportionate
+# in size, would expect gk's to form a small seperate group in our data
+```
+
+![Hclust Model Clusters](https://github.com/aaguilargonzalez/Comparing-Players-in-Fifa-18/blob/master/Images/Hclust%20Model%20Clusters.png)
+
+![Kmeans Model Clusters](https://github.com/aaguilargonzalez/Comparing-Players-in-Fifa-18/blob/master/Images/K-Means%20Model%20Clusters.png)
+
+I used these clusters to identify the player "type", a more general classification than a player's position. However, I can take advantage of the player position variable to help "profile" each cluster.
+
+As it turns out, the cluster on the far left is indeed composed entirely of goalkeepers. The lowermost cluster is composed almost entirely of center-backs(CBs), with one center defensive midfield (CDM), and two right backs (RBs). This cluster forms the "Defensive Anchor" type. The next cluster moving up the right-hand side, consists mostly of CBs, with some CDMs and central midfielders (CMs). I call this cluster the "Defensive Playmaker" type and includes players like David Luiz and Nemanja Matic. The next pinkish cluster, is the largest cluster and contains a wide mix of defenders, midfielders and forwards. I think of this cluster as a catch-all for players who don't fall in the other clusters, I use the term "Box to Box Player" to describe this cluster, but it includes players as varying as N'golo Kante and Zlatan Ibrahimovic. Finally, the blue cluster at the top has players such as Neymar and Lionel Messi. I call this cluster the "Out and Out Attacker" type.
+
+```r
+#-------------------------------#
+#       Cluster Profiles        #
+#-------------------------------#
+
+player_profile <- cbind(player_final[1:750, !(colnames(player_final) %in% attribute_cols)], 
+                        cluster_data[,1:3])
+
+colnames(player_profile)[10:11] <- c("x", "y") 
+
+# Look at each cluster by player position and overall rating
+# note that its only postion_1 so not complete picture but approximate
+table(player_profile$hclust_groups, player_profile$position_1)
+# Group 1 comprised mostly of STs, wingers and some midfielders (blue), out and out attackers
+# Group 2 comprised of all goalkeepers (purple), goalkeepers
+# Group 3 big range of midfielders (largest group), strikers and defenders (pink), all-rounders
+# Group 4 contains mostly CBs, with some CMs and CDMs (orange-pink), defensive playmaker
+# Group 5 comprised of almost all CBs, and one CDM, two RBs (orange), defensive anchor
+
+overall_profile <- player_profile %>%
+  group_by(hclust_groups) %>%
+  summarise(min = min(overall),
+            median = median(overall),
+            mean = mean(overall),
+            max = max(overall))
+# Evenly distributed amongst overall
+
+# Set cluster colours
+player_profile$color <- ifelse(player_profile$hclust_groups == 1, "#2C90F7",
+                                ifelse(player_profile$hclust_groups == 2, "#9487C6",
+                                       ifelse(player_profile$hclust_groups == 3, "#C07C8D",
+                                              ifelse(player_profile$hclust_groups == 4, "#DC7157",
+                                                     "#EF6537"))))
+
+# Rename cluster groups
+player_profile$hclust_groups <- ifelse(player_profile$hclust_groups == 1, "Out and Out Attacker",
+                                       ifelse(player_profile$hclust_groups == 2, "Goalkeeper",
+                                       ifelse(player_profile$hclust_groups == 3, "Box to Box Player",
+                                       ifelse(player_profile$hclust_groups == 4, "Defensive Playmaker",
+                                       "Defensive Anchor"))))
+
+# Rename hclust_group column
+colnames(player_profile)[12] <- c("type")
+
+# Combine position columns
+player_profile$position_2 <- ifelse(is.na(player_profile$position_2), "", player_profile$position_2)
+player_profile$position_3 <- ifelse(is.na(player_profile$position_3), "", player_profile$position_3)
+player_profile$position_4 <- ifelse(is.na(player_profile$position_4), "", player_profile$position_4)
+
+player_profile$position <- ifelse(nchar(player_profile$position_4) > 0, paste(player_profile$position_1,
+                                                                               player_profile$position_2,
+                                                                               player_profile$position_3,
+                                                                               player_profile$position_4, sep = ","),
+                                  ifelse(nchar(player_profile$position_3) > 0,paste(player_profile$position_1,
+                                                                               player_profile$position_2,
+                                                                               player_profile$position_3, sep = ","),
+                                  ifelse(nchar(player_profile$position_2) > 0,paste(player_profile$position_1,
+                                                                               player_profile$position_2, sep = ","),
+                                  player_profile$position_1)))
+
+player_profile$position <- toupper(player_profile$position)
+
+# Drop old position columns
+player_profile <- player_profile[, !(colnames(player_profile) %in% new_positions)]
+
+
+#-------------------------------#
+#     Nearest Neighbours        #
+#-------------------------------#
+
+# Distance Matrix
+dist_df <- as.matrix(d)
+
+# Create dataframe for loop results
+nearest_neigh <- data.frame(matrix(data = NA, nrow = nrow(player_profile), ncol = 5))
+
+for (i in 1:nrow(player_profile)){
+  # Find the five smallest distances for each row
+  # Ignore the smallest b/c that will just be the diagonal value
+  all_dist <- dist_df[i,]
+  dist_cols <- colnames(dist_df)
+  dist_df2 <- data.frame(all_dist, dist_cols)
+  dist_order <- dist_df2 %>%
+    arrange(all_dist)
+  dist_order$dist_cols <- as.numeric(levels(dist_order$dist_cols))[dist_order$dist_cols]
+  # Get the row indices of the five nearest players
+  five_ind <- dist_order[2:6, "dist_cols"]
+  # Get names of the five nearest players
+  five_names <- player_profile[five_ind, "name"]
+  # Store names in empty dataframe
+  for (j in 1:length(five_names)){
+    nearest_neigh[i,j] <- five_names[j]
+  }
+}
+
+colnames(nearest_neigh) <- c("neigh_1", "neigh_2", "neigh_3", "neigh_4", "neigh_5")
+
+player_complete <- cbind(player_profile, nearest_neigh)
+
+# Export
+write.csv(player_complete, "Fifa_18_Player_Profiles.csv")
+```
+
+
+
