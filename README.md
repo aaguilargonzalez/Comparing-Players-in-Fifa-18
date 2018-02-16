@@ -149,7 +149,7 @@ pc_df <- cbind.data.frame(pc$x[,1], pc$x[,2])
 ```
 The scree plot below shows that the two components account for 75% of the variance in the 36 player attributes. Ideally, at least 85% of the variance would be retained, but according to the scree plot that would require about four components. For the purposes of visualization, I'll limit the number of components to two.
 
-![PCA Scree Plot](https://github.com/aaguilargonzalez/Comparing-Players-in-Fifa-18/blob/master/Images/PCA_Scree_Plot.jpeg)
+![PCA Scree Plot](https://aaguilargonzalez.github.io/Comparing-Players-in-Fifa-18/Images/PCA_Scree_Plot.jpeg)
 
 With the player attributes condensed to just two dimensions, its straightforward to create a scatter plot where each point represents a single player. For the plot below and the rest of the analysis, I focus on the top 750 players by overall ranking in the Fifa dataset.
 
@@ -163,7 +163,7 @@ ggplot(pc_df, aes(pc$x[,1], pc$x[,2])) +
   theme(plot.title = element_text(hjust = 0.5))
 ```
 
-![PCA Scatter Plot](https://github.com/aaguilargonzalez/Comparing-Players-in-Fifa-18/blob/master/Images/PCA%20Scatter.png)
+![PCA Scatter Plot](https://aaguilargonzalez.github.io/Comparing-Players-in-Fifa-18/Images/PCA%20Scatter.png)
 
 It's clear that there are some groups of players clustered together. It's likely that goalkeepers form the cluster of players on the left of the scatter plot given that their attributes are so different to outfield players. To identify other potential clusters, I utilized both K-Means and Hierarchical Agglomerative (HClust) clustering. As the scree-like plots below indicate, each of the algorithms suggest a different number of clusters (judging by the "elbow" of each plot). The Hierarchical method suggests four or five clusters, while looking at the within group sum of squares for K-Means suggest three clusters would be optimal.
 
@@ -194,9 +194,9 @@ plot(1:15, wss, type="b", xlab="Number of Clusters",
      ylab="Within groups sum of squares", main = "Scree-Like Plot for K-Means Model")
 ```
 
-![Hclust Scree Plot](https://github.com/aaguilargonzalez/Comparing-Players-in-Fifa-18/blob/master/Images/Scree%20Plot%20HClust.png)
+![Hclust Scree Plot](https://aaguilargonzalez.github.io/Comparing-Players-in-Fifa-18/Images/Scree%20Plot%20HClust.png)
 
-![KMeans Scree Plot](https://github.com/aaguilargonzalez/Comparing-Players-in-Fifa-18/blob/master/Images/Scree%20Plot%20K-Means.png)
+![KMeans Scree Plot](https://aaguilargonzalez.github.io/Comparing-Players-in-Fifa-18/Images/Scree%20Plot%20K-Means.png)
 
 Running each of the HClust and K-Means models on the Fifa players scatterplot shows the differences between the two models. K-Means operates on the assumption of equally proportionate clusters, and this bias shows in the plots below.
 
@@ -230,9 +230,9 @@ ggplot(cluster_data, aes(pc$x[,1], pc$x[,2], color = k$cluster)) +
 # in size, would expect gk's to form a small seperate group in our data
 ```
 
-![Hclust Model Clusters](https://github.com/aaguilargonzalez/Comparing-Players-in-Fifa-18/blob/master/Images/Hclust%20Model%20Clusters.png)
+![Hclust Model Clusters](https://aaguilargonzalez.github.io/Comparing-Players-in-Fifa-18/Images/Hclust%20Model%20Clusters.png)
 
-![Kmeans Model Clusters](https://github.com/aaguilargonzalez/Comparing-Players-in-Fifa-18/blob/master/Images/K-Means%20Model%20Clusters.png)
+![Kmeans Model Clusters](https://aaguilargonzalez.github.io/Comparing-Players-in-Fifa-18/Images/K-Means%20Model%20Clusters.png)
 
 I used these clusters to identify the player "type", a more general classification than a player's position. However, I can take advantage of the player position variable to help "profile" each cluster.
 
