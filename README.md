@@ -1,7 +1,7 @@
 # Comparing Players in Fifa 18
 ## Ariel Aguilar Gonzalez
 
-This purpose of this project is to compare players by attributes in the Fifa 18 video game. The full interactive visualization can be seen at THIS LINK. The code below demonstrates how I prepared and cleaned the Fifa 18 data.
+This purpose of this project is to compare players by attributes in the Fifa 18 video game. The full interactive visualization can be seen [here](http://arielaguilargonzalez.com/fifa-18-players-comparison-tool/). The code below demonstrates how I prepared and cleaned the Fifa 18 data. Code written in R.
 
 The Fifa 18 players database is available through [Kaggle](https://www.kaggle.com/kevinmh/fifa-18-more-complete-player-dataset), and includes almost 18,000 players with 185 fields for each player including about 36 player attributes, such as finishing and crossing. 
 
