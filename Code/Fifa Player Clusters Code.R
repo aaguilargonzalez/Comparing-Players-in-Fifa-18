@@ -20,7 +20,7 @@ library("ggplot2")
 library("htmltools")
 library("ggdendro")
 
-player_raw <- read_csv("/Users/arielaguilargonzalez/Library/Lima/R/Fifa Player Clusters/Data/complete.csv")
+player_raw <- read_csv(".../Kaggle Dataset.csv")
 # 17,994 players
 # 185 attributes
 
@@ -311,74 +311,4 @@ player_complete <- cbind(player_profile, nearest_neigh)
 # Export
 write.csv(player_complete, "Fifa_18_Player_Profiles.csv")
 
-#-------------------------------#
-#       High Chart Plot         #
-#-------------------------------#
-
-player_data <- readRDS("Fifa_18_Player_Profiles.rds")
-
-ds <- player_data %>% 
-  select(name, club, overall, position, type,
-         photo, color, x, y) %>% 
-  list.parse3()
-
-ds2 <- player_data %>% 
-  select(color, x, y) %>%
-  mutate(color = hex_to_rgba(color, 0.05)) %>% 
-  list.parse3()
-
-urlimage_path <- "https://cdn.sofifa.org/18/players/"
-
-tooltip <- c("name", "club", "overall",
-             "position", "type") %>%
-  map(function(x){
-    tags$tr(
-      tags$th(str_replace_all(str_to_title(x), "_", " ")),
-      tags$td(paste0("{point.", x, "}"))
-    )
-  }) %>% 
-  do.call(tagList, .) %>% 
-  tagList(
-    tags$img(src = paste0(urlimage_path, "{point.photo}"),
-             width = "125px", height = "125px")
-  ) %>% 
-  as.character()
-
-hccluster <- highchart() %>% 
-  hc_chart(zoomType = "xy") %>% 
-  hc_xAxis(minRange = diff(range(player_data$x))/5) %>%
-  hc_yAxis(minRange = diff(range(player_data$y))/5) %>%
-  hc_add_series(data = ds,
-                type = "scatter",
-                name = "Fifa 18 Players",
-                states = list(hover = list(halo = list(
-                  size  = 50,
-                  attributes = list(
-                    opacity = 1)
-                )))) %>%
-  hc_add_series(data = ds2, type = "scatter",
-                marker = list(radius = 30, symbol = "circle"),
-                zIndex = -3,  enableMouseTracking = FALSE,
-                linkedTo = ":previous") %>%
-  hc_plotOptions(series = list()) %>%  
-  hc_tooltip(
-    useHTML = TRUE,
-    borderRadius = 0,
-    borderWidth = 5,
-    headerFormat = "<table>",
-    pointFormat = tooltip,
-    footerFormat = "</table>"
-  ) %>% 
-  hc_add_theme(
-    hc_theme_null(
-      chart = list(
-        backgroundColor = "transparent",
-        style = list(
-          fontFamily = "Roboto"
-        )
-      )
-    )
-  )
-
-hccluster
 
