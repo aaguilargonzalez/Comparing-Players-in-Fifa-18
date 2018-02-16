@@ -1,5 +1,7 @@
-# Comparing-Players-in-Fifa-18
-Identifying comparable players by attributes in the Fifa 18 video game
+# Comparing Players in Fifa 18
+## Ariel Aguilar Gonzalez
+
+This purpose of this project is to compare players by attributes in the Fifa 18 video game. The full interactive visualization can be seen at THIS LINK. The code below demonstrates how I prepared and cleaned the Fifa 18 data.
 
 The Fifa 18 players database is available through [Kaggle](https://www.kaggle.com/kevinmh/fifa-18-more-complete-player-dataset), and includes almost 18,000 players with 185 fields for each player including about 36 player attributes, such as finishing and crossing. 
 
@@ -155,4 +157,4 @@ ggplot(pc_df, aes(pc$x[,1], pc$x[,2])) +
 ```
 The scree plot below shows that the two components account for 75% of the variance in the 36 player attributes. Ideally, at least 85% of the variance would be retained, but according to the scree plot that would require about four components. For the purposes of visualization, I'll limit the number of components to two.
 
-![PCA Scree Plot] (https://github.com/aaguilargonzalez/Comparing-Players-in-Fifa-18/blob/master/Images/PCA%20Scree%20Plot.png)
+![PCA Scree Plot] (https://aaguilargonzalez.github.io/Comparing-Players-in-Fifa-18/Images/PCA-Scree-Plot.png)
