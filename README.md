@@ -157,4 +157,4 @@ ggplot(pc_df, aes(pc$x[,1], pc$x[,2])) +
 ```
 The scree plot below shows that the two components account for 75% of the variance in the 36 player attributes. Ideally, at least 85% of the variance would be retained, but according to the scree plot that would require about four components. For the purposes of visualization, I'll limit the number of components to two.
 
-![PCA Scree Plot](https://aaguilargonzalez.github.io/Comparing-Players-in-Fifa-18/PCA_Scree_Plot.png)
+![PCA Scree Plot](https://aaguilargonzalez.github.io/Comparing-Players-in-Fifa-18/PCAScreePlot.png)
